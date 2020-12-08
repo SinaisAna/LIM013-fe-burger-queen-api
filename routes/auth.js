@@ -1,5 +1,10 @@
+/* eslint-disable linebreak-style */
 const jwt = require('jsonwebtoken');
 const config = require('../config');
+const router = require("express").Router();
+const bcrypt = require('bcrypt');
+
+const mysqlConnection = require('../database');
 
 const { secret } = config;
 
@@ -19,14 +24,45 @@ module.exports = (app, nextMain) => {
    */
   app.post('/auth', (req, resp, next) => {
     const { email, password } = req.body;
-
     if (!email || !password) {
       return next(400);
     }
+    const sql = `SELECT * FROM users WHERE email = "${email}" `;
+    mysqlConnection.query(sql, (error, result) => {
 
-    // TODO: autenticar a la usuarix
-    next();
+      if (error) throw error;
+      if (!result) {
+        return resp.status(400).json({
+          success: 0,
+          data: "Invalid email"
+        });
+      }
+      // const pass = bcrypt.compareSync(password, result[0].password);
+      const pass = password === result[0].password;
+      console.log(pass);
+      if (pass) {
+        result.password = undefined;
+        const jsontoken = jwt.sign({ result: result }, "qwerty123", {
+          expiresIn: "1h"
+        });
+        resp.status(200).json({
+          success: 1,
+          message: "login successfully",
+          token: jsontoken
+        });
+
+        // resp.header('authorization', "token");
+        // resp.status(200).json(result);
+      } else {
+        resp.status(400).json({
+          success: 0,
+          data: 'Invalid password',
+        });
+      }
+    });
   });
 
+  // TODO: autenticar a la usuarix
+  // next();
   return nextMain();
 };

@@ -1,4 +1,6 @@
+/* eslint-disable linebreak-style */
 const jwt = require('jsonwebtoken');
+const mysqlConnection = require('../database');
 
 module.exports = (secret) => (req, resp, next) => {
   const { authorization } = req.headers;
@@ -19,28 +21,34 @@ module.exports = (secret) => (req, resp, next) => {
     }
 
     // TODO: Verificar identidad del usuario usando `decodeToken.uid`
+    const sql = `SELECT * FROM users WHERE email = "${email}" `;
+    mysqlConnection.query(sql, (error, result) => {
+      if (error) throw error;
+      if (!result) {
+        return resp.status(400).json({
+          success: 0,
+          data: 'Invalid email',
+        });
+      }
+    });
   });
 };
-
 
 module.exports.isAuthenticated = (req) => (
   // TODO: decidir por la informacion del request si la usuaria esta autenticada
   false
 );
 
-
 module.exports.isAdmin = (req) => (
   // TODO: decidir por la informacion del request si la usuaria es admin
   false
 );
-
 
 module.exports.requireAuth = (req, resp, next) => (
   (!module.exports.isAuthenticated(req))
     ? next(401)
     : next()
 );
-
 
 module.exports.requireAdmin = (req, resp, next) => (
   // eslint-disable-next-line no-nested-ternary
