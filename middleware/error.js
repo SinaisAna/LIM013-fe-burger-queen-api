@@ -1,3 +1,4 @@
+/* eslint-disable linebreak-style */
 const httpErrors = {
   400: 'Bad request',
   401: 'Unauthorized',

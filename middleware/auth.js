@@ -4,7 +4,7 @@ const mysqlConnection = require('../database');
 
 module.exports = (secret) => (req, resp, next) => {
   const { authorization } = req.headers;
-
+  console.log(authorization);
   if (!authorization) {
     return next();
   }
@@ -19,30 +19,36 @@ module.exports = (secret) => (req, resp, next) => {
     if (err) {
       return next(403);
     }
-
+    console.log(decodedToken);
     // TODO: Verificar identidad del usuario usando `decodeToken.uid`
-    const sql = `SELECT * FROM users WHERE email = "${email}" `;
+    const sql = `SELECT * FROM users WHERE email = "${decodedToken.result[0].email}" `;
     mysqlConnection.query(sql, (error, result) => {
       if (error) throw error;
-      if (!result) {
-        return resp.status(400).json({
-          success: 0,
-          data: 'Invalid email',
-        });
+      if (result) {
+        req.user = result[0];
+        next();
+      } else {
+        next(404);
       }
     });
   });
 };
 
-module.exports.isAuthenticated = (req) => (
+module.exports.isAuthenticated = (req) => {
   // TODO: decidir por la informacion del request si la usuaria esta autenticada
-  false
-);
+  if (req.user) {
+    return true;
+  }
+  return false;
+};
 
-module.exports.isAdmin = (req) => (
+module.exports.isAdmin = (req) => {
   // TODO: decidir por la informacion del request si la usuaria es admin
-  false
-);
+  if (req.user.isadmin) {
+    return true;
+  }
+  return false;
+};
 
 module.exports.requireAuth = (req, resp, next) => (
   (!module.exports.isAuthenticated(req))

@@ -41,13 +41,14 @@ module.exports = (app, nextMain) => {
       const pass = password === result[0].password;
       console.log(pass);
       if (pass) {
-        result.password = undefined;
-        const jsontoken = jwt.sign({ result: result }, "qwerty123", {
-          expiresIn: "1h"
+        // result.password = undefined;
+        const jsontoken = jwt.sign({ result: result }, secret, {
+          expiresIn: '1h'
         });
+        resp.header('authorization', jsontoken);
         resp.status(200).json({
           success: 1,
-          message: "login successfully",
+          message: 'login successfully',
           token: jsontoken
         });
 
