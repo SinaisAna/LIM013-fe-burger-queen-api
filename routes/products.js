@@ -1,7 +1,16 @@
+/* eslint-disable linebreak-style */
 const {
   requireAuth,
   requireAdmin,
 } = require('../middleware/auth');
+
+const {
+  getAllData,
+  getDataById,
+  createData,
+  updateDataById,
+  deleteData,
+} = require('../controller/sql_query');
 
 /** @module products */
 module.exports = (app, nextMain) => {
@@ -28,6 +37,9 @@ module.exports = (app, nextMain) => {
    * @code {401} si no hay cabecera de autenticación
    */
   app.get('/products', requireAuth, (req, resp, next) => {
+    getAllData('products')
+      .then((result) => resp.status(200).send(result))
+      .catch(() => resp.status(404).send('no products'));
   });
 
   /**
@@ -48,6 +60,13 @@ module.exports = (app, nextMain) => {
    * @code {404} si el producto con `productId` indicado no existe
    */
   app.get('/products/:productId', requireAuth, (req, resp, next) => {
+    const { productId } = req.params;
+    if (!productId) {
+      return resp.status(400).send('No data');
+    }
+    getDataById('products', productId)
+      .then((result) => resp.status(200).send(result))
+      .catch(() => resp.status(404).send('product does not exist'));
   });
 
   /**
@@ -73,8 +92,29 @@ module.exports = (app, nextMain) => {
    * @code {404} si el producto con `productId` indicado no existe
    */
   app.post('/products', requireAdmin, (req, resp, next) => {
+    const {name, price, image, type} = req.body;
+    if (!(name && price)) {
+      return resp.status(400).send('missing required data');
+    }
+    const dateEntry = new Date();
+    const newProduct = {
+      name,
+      price,
+      image,
+      type,
+      dateEntry,
+    };
+    createData('products', newProduct)
+      .then((result) => resp.status(200).send(
+        {
+          _id: result.insertId,
+          price,
+          image,
+          type,
+          dateEntry,
+        },
+      ));
   });
-
 
   /**
    * @name PUT /products
@@ -100,6 +140,29 @@ module.exports = (app, nextMain) => {
    * @code {404} si el producto con `productId` indicado no existe
    */
   app.put('/products/:productId', requireAdmin, (req, resp, next) => {
+    const { productId } = req.params;
+    const { name, price, image, type } = req.body;
+
+    const newProduct = {
+      name,
+      price,
+      image,
+      type,
+    };
+    getDataById('products', productId)
+      .then(() => {
+        updateDataById('products', productId, newProduct)
+          .then(() => resp.status(200).send(
+            {
+              id: productId,
+              name,
+              price,
+              image,
+              type,
+            },
+          ));
+      })
+      .catch(() => resp.status(404).send('products does not exist'));
   });
 
   /**
@@ -121,6 +184,13 @@ module.exports = (app, nextMain) => {
    * @code {404} si el producto con `productId` indicado no existe
    */
   app.delete('/products/:productId', requireAdmin, (req, resp, next) => {
+    const { productId } = req.params;
+    getDataById('products', productId)
+      .then((result) => {
+        deleteData('products', productId)
+          .then(() => resp.status(200).send(result));
+      })
+      .catch(() => resp.status(404).send('product does not exist'));
   });
 
   nextMain();
