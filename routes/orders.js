@@ -2,6 +2,15 @@ const {
   requireAuth,
 } = require('../middleware/auth');
 
+const {
+  getAllData,
+  getDataById,
+  createData,
+  updateDataById,
+  deleteData,
+  getOrderById,
+} = require('../controller/sql_query');
+
 /** @module orders */
 module.exports = (app, nextMain) => {
   /**
@@ -31,7 +40,35 @@ module.exports = (app, nextMain) => {
    * @code {401} si no hay cabecera de autenticación
    */
   app.get('/orders', requireAuth, (req, resp, next) => {
-    
+    const final_result = {};
+    getAllData('orders')
+      .then((result) => {
+        //console.log("ordenes", result);
+        let i = 0;
+        let productArray = {};
+        result.forEach((element) => {
+          
+          getOrderById(element.id)
+            .then((products) => {
+              console.log("productos", products);
+              productArray = {
+                "_id": element.id,
+                "userId": element.id_user,
+                "client": element.client,
+                "products": products,
+                "status": element.status,
+                "dateEntry": element.dateEntry,
+              };
+              final_result.orders=productArray;
+              console.log("productoarray", productArray,"sali");
+        resp.status(200).send(productArray);
+            });
+          i++;
+        });
+       
+        
+      })
+      .catch(() => resp.status(404).send('no products'));
   });
 
   /**

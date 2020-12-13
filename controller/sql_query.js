@@ -51,4 +51,15 @@ module.exports = {
       reject(error);
     });
   }),
+
+  getOrderById: (value) => new Promise((resolve, reject) => {
+    mysqlConnection.query(`select order_details.quantity,products.name from order_details inner join products on products.id=order_details.id_product where id_order=?`, value, (error, result) => {
+      if (result.length > 0) {
+        resolve(result);
+      } else {
+        reject(error);
+      }
+    });
+  }),
 };
+
