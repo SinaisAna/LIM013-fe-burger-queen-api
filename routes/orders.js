@@ -1,8 +1,10 @@
+/* eslint-disable linebreak-style */
 const {
   requireAuth,
 } = require('../middleware/auth');
 
 const {
+  getDataByKey,
   getAllData,
   getDataById,
   createData,
@@ -47,26 +49,26 @@ module.exports = (app, nextMain) => {
         let i = 0;
         let productArray = {};
         result.forEach((element) => {
-          
+          //const order_data= await 
           getOrderById(element.id)
             .then((products) => {
               console.log("productos", products);
               productArray = {
-                "_id": element.id,
-                "userId": element.id_user,
-                "client": element.client,
-                "products": products,
-                "status": element.status,
-                "dateEntry": element.dateEntry,
+                '_id': element.id,
+                'userId': element.id_user,
+                'client': element.client,
+                'products': products,
+                'status': element.status,
+                'dateEntry': element.dateEntry,
               };
-              final_result.orders=productArray;
-              console.log("productoarray", productArray,"sali");
-        resp.status(200).send(productArray);
+              final_result.orders = productArray;
+              console.log("productoarray", productArray, "sali");
+
             });
           i++;
         });
-       
-        
+        resp.status(200).send(final_result);
+        console.log("salioprimero");
       })
       .catch(() => resp.status(404).send('no products'));
   });
@@ -93,6 +95,24 @@ module.exports = (app, nextMain) => {
    * @code {404} si la orden con `orderId` indicado no existe
    */
   app.get('/orders/:orderId', requireAuth, (req, resp, next) => {
+    const { orderId } = req.params;
+    getDataById('orders', orderId)
+      .then((result) => {
+        let productArray = {};
+        getOrderById(result[0].id)
+          .then((products) => {
+            productArray = {
+              _id: result[0].id,
+              userId: result[0].id_user,
+              client: result[0].client,
+              products,
+              status: result[0].status,
+              dateEntry: result[0].dateEntry,
+            };
+            resp.status(200).send(productArray);
+          });
+      })
+      .catch(() => resp.status(404).send('no products'));
   });
 
   /**
@@ -122,6 +142,35 @@ module.exports = (app, nextMain) => {
    * @code {401} si no hay cabecera de autenticación
    */
   app.post('/orders', requireAuth, (req, resp, next) => {
+    const {
+      userId, client, products,
+    } = req.body;
+
+    const dateEntry = new Date();
+
+    const newOrder = {
+      id_user: userId,
+      client,
+      status: 'pending',
+      dateEntry,
+    };
+    createData('orders', newOrder)
+      .then((result) => {
+        products.forEach((product) => {
+          const newOrderdetail = {
+            id_order: result.insertId,
+            id_product: product.productId,
+            quantity: product.qty,
+          };
+          createData('order_details', newOrderdetail);
+        });
+        getOrderById(result.insertId)
+          .then((data) => {
+            newOrder._id = result.insertId;
+            newOrder.products = data;
+            resp.status(200).send(newOrder);
+          });
+      });
   });
 
   /**
@@ -153,6 +202,44 @@ module.exports = (app, nextMain) => {
    * @code {404} si la orderId con `orderId` indicado no existe
    */
   app.put('/orders/:orderId', requireAuth, (req, resp, next) => {
+    const { orderId } = req.params;
+    const {
+      userId, client, products, status,
+    } = req.body;
+
+    const newOrder = {
+      id_user: userId,
+      client,
+      status,
+    };
+    getDataById('orders', orderId)
+      .then(() => {
+        updateDataById('orders', orderId, newOrder)
+          .then(() => {
+            getDataByKey('order_details', 'id_order', orderId)
+              .then((dataProducts) => {
+                dataProducts.forEach((dProduct) => {
+                  deleteData('order_details', dProduct.id);
+                });
+              });
+
+            products.forEach((product) => {
+              const newOrderdetail = {
+                id_order: orderId,
+                id_product: product.productId,
+                quantity: product.qty,
+              };
+              createData('order_details', newOrderdetail);
+            });
+            getOrderById(orderId)
+            .then((resuProduct)=>{
+              newOrder._id = orderId;
+              newOrder.products = resuProduct;
+              resp.status(200).send(newOrder);
+            });
+          });
+      })
+      .catch(() => resp.status(404).send('orders does not exist'));
   });
 
   /**

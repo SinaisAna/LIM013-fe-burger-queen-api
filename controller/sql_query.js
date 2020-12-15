@@ -1,3 +1,4 @@
+/* eslint-disable linebreak-style */
 const mysqlConnection = require('../database');
 
 module.exports = {
@@ -13,6 +14,16 @@ module.exports = {
 
   getDataById: (table, value) => new Promise((resolve, reject) => {
     mysqlConnection.query(`SELECT * FROM ${table} WHERE id =?`, value, (error, result) => {
+      if (result.length > 0) {
+        resolve(result);
+      } else {
+        reject(error);
+      }
+    });
+  }),
+
+  getDataByKey: (table, key, value) => new Promise((resolve, reject) => {
+    mysqlConnection.query(`SELECT * FROM ${table} WHERE ${key} =?`, value, (error, result) => {
       if (result.length > 0) {
         resolve(result);
       } else {
@@ -53,7 +64,7 @@ module.exports = {
   }),
 
   getOrderById: (value) => new Promise((resolve, reject) => {
-    mysqlConnection.query(`select order_details.quantity,products.name from order_details inner join products on products.id=order_details.id_product where id_order=?`, value, (error, result) => {
+    mysqlConnection.query('select order_details.quantity,products.name from order_details inner join products on products.id=order_details.id_product where id_order=?', value, (error, result) => {
       if (result.length > 0) {
         resolve(result);
       } else {
@@ -62,4 +73,3 @@ module.exports = {
     });
   }),
 };
-
