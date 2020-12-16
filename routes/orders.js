@@ -41,36 +41,28 @@ module.exports = (app, nextMain) => {
    * @code {200} si la autenticación es correcta
    * @code {401} si no hay cabecera de autenticación
    */
-  app.get('/orders', requireAuth, (req, resp, next) => {
-    const final_result = {};
-    getAllData('orders')
-      .then((result) => {
-        //console.log("ordenes", result);
-        let i = 0;
-        let productArray = {};
-        result.forEach((element) => {
-          //const order_data= await 
-          getOrderById(element.id)
-            .then((products) => {
-              console.log("productos", products);
-              productArray = {
-                '_id': element.id,
-                'userId': element.id_user,
-                'client': element.client,
-                'products': products,
-                'status': element.status,
-                'dateEntry': element.dateEntry,
-              };
-              final_result.orders = productArray;
-              console.log("productoarray", productArray, "sali");
-
-            });
-          i++;
-        });
-        resp.status(200).send(final_result);
-        console.log("salioprimero");
-      })
-      .catch(() => resp.status(404).send('no products'));
+  app.get('/orders', requireAuth, async (req, resp, next) => {
+    const finalResult = {};
+    const orders = await getAllData('orders');
+    const qtyOrders = orders.length;
+    let i = 0;
+    const productArray = [];
+    orders.forEach(async (element) => {
+      const products = await getOrderById(element.id);
+      productArray[i] = {
+        _id: element.id,
+        userId: element.id_user,
+        client: element.client,
+        products,
+        status: element.status,
+        dateEntry: element.dateEntry,
+      };
+      i++;
+      if (qtyOrders === i) {
+        finalResult.orders = productArray;
+        resp.status(200).send(productArray);
+      }
+    });
   });
 
   /**
@@ -213,31 +205,25 @@ module.exports = (app, nextMain) => {
       status,
     };
     getDataById('orders', orderId)
-      .then(() => {
-        updateDataById('orders', orderId, newOrder)
-          .then(() => {
-            getDataByKey('order_details', 'id_order', orderId)
-              .then((dataProducts) => {
-                dataProducts.forEach((dProduct) => {
-                  deleteData('order_details', dProduct.id);
-                });
-              });
+      .then(async () => {
+        updateDataById('orders', orderId, newOrder);
+        const dataProducts = await getDataByKey('order_details', 'id_order', orderId);
+        dataProducts.forEach((dProduct) => {
+          deleteData('order_details', dProduct.id);
+        });
 
-            products.forEach((product) => {
-              const newOrderdetail = {
-                id_order: orderId,
-                id_product: product.productId,
-                quantity: product.qty,
-              };
-              createData('order_details', newOrderdetail);
-            });
-            getOrderById(orderId)
-            .then((resuProduct)=>{
-              newOrder._id = orderId;
-              newOrder.products = resuProduct;
-              resp.status(200).send(newOrder);
-            });
-          });
+        products.forEach((product) => {
+          const newOrderdetail = {
+            id_order: orderId,
+            id_product: product.productId,
+            quantity: product.qty,
+          };
+          createData('order_details', newOrderdetail);
+        });
+        const resuProduct = await getOrderById(orderId);
+        newOrder._id = orderId;
+        newOrder.products = resuProduct;
+        resp.status(200).send(newOrder);
       })
       .catch(() => resp.status(404).send('orders does not exist'));
   });
@@ -264,6 +250,29 @@ module.exports = (app, nextMain) => {
    * @code {404} si el producto con `orderId` indicado no existe
    */
   app.delete('/orders/:orderId', requireAuth, (req, resp, next) => {
+    const { orderId } = req.params;
+    getDataById('orders', orderId)
+      .then(async (result) => {
+        let productArray = {};
+        getOrderById(result[0].id)
+          .then((products) => {
+            productArray = {
+              _id: result[0].id,
+              userId: result[0].id_user,
+              client: result[0].client,
+              products,
+              status: result[0].status,
+              dateEntry: result[0].dateEntry,
+            };
+            resp.status(200).send(productArray);
+          });
+        const dataProducts = await getDataByKey('order_details', 'id_order', orderId);
+        dataProducts.forEach((dProduct) => {
+          deleteData('order_details', dProduct.id);
+        });
+        deleteData('orders', orderId);
+      })
+      .catch(() => resp.status(404).send('orders does not exist'));
   });
 
   nextMain();
