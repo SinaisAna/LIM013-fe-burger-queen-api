@@ -84,7 +84,9 @@ module.exports = (app, next) => {
    * @code {401} si no hay cabecera de autenticación
    * @code {403} si no es ni admin
    */
-  app.get('/users', requireAdmin, (req, resp, next) => getUsers(req, resp, next));
+  app.get('/users', requireAdmin, (req, resp, next) => {
+    getUsers(req, resp, next);
+  });
 
   /**
    * @name GET /users/:uid

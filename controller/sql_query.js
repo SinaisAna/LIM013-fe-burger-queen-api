@@ -2,9 +2,12 @@
 const mysqlConnection = require('../database');
 
 module.exports = {
-  getAllData: (table) => new Promise((resolve, reject) => {
+  getAllData: (table, page, limit) => new Promise((resolve, reject) => {
     mysqlConnection.query(`SELECT * FROM ${table}`, (error, result) => {
       if (result.length) {
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+        result = result.slice(startIndex, endIndex);
         resolve(result);
       } else {
         reject(error);

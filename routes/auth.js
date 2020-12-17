@@ -42,7 +42,7 @@ module.exports = (app, nextMain) => {
       console.log(pass);
       if (pass) {
         // result.password = undefined;
-        const jsontoken = jwt.sign({ result: result }, secret, {
+        const jsontoken = jwt.sign({ result }, secret, {
           expiresIn: '1h'
         });
         resp.header('authorization', jsontoken);

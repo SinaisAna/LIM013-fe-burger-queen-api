@@ -43,26 +43,30 @@ module.exports = (app, nextMain) => {
    */
   app.get('/orders', requireAuth, async (req, resp, next) => {
     const finalResult = {};
-    const orders = await getAllData('orders');
+    const orders = await getAllData('orders', page, limit);
     const qtyOrders = orders.length;
-    let i = 0;
-    const productArray = [];
-    orders.forEach(async (element) => {
-      const products = await getOrderById(element.id);
-      productArray[i] = {
-        _id: element.id,
-        userId: element.id_user,
-        client: element.client,
-        products,
-        status: element.status,
-        dateEntry: element.dateEntry,
-      };
-      i++;
-      if (qtyOrders === i) {
-        finalResult.orders = productArray;
-        resp.status(200).send(productArray);
-      }
-    });
+    if (qtyOrders.length > 0) {
+      let i = 0;
+      const productArray = [];
+      orders.forEach(async (element) => {
+        const products = await getOrderById(element.id);
+        productArray[i] = {
+          _id: element.id,
+          userId: element.id_user,
+          client: element.client,
+          products,
+          status: element.status,
+          dateEntry: element.dateEntry,
+        };
+        i++;
+        if (qtyOrders === i) {
+          finalResult.orders = productArray;
+          resp.status(200).send(productArray);
+        }
+      });
+    } else {
+      resp.status(400).send('not data');
+    }
   });
 
   /**

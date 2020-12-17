@@ -37,7 +37,9 @@ module.exports = (app, nextMain) => {
    * @code {401} si no hay cabecera de autenticación
    */
   app.get('/products', requireAuth, (req, resp, next) => {
-    getAllData('products')
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
+    getAllData('products', page, limit)
       .then((result) => resp.status(200).send(result))
       .catch(() => resp.status(404).send('no products'));
   });
