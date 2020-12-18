@@ -1,8 +1,7 @@
+/* eslint-disable linebreak-style */
 const config = require('../config');
 
-
 const { fetch, fetchWithAuth } = process;
-
 
 describe('POST /auth', () => {
   it('should respond with 400 when email and password missing', () => (

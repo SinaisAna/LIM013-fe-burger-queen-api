@@ -1,7 +1,7 @@
+/* eslint-disable linebreak-style */
 const url = require('url');
 const qs = require('querystring');
 const config = require('../config');
-
 
 const {
   fetch,
@@ -10,13 +10,11 @@ const {
   fetchWithAuth,
 } = process;
 
-
 const parseLinkHeader = (str) => str.split(',')
   .reduce((memo, item) => {
     const [, value, key] = /^<(.*)>;\s+rel="(first|last|prev|next)"/.exec(item.trim());
     return { ...memo, [key]: value };
   }, {});
-
 
 describe('GET /users', () => {
   it('should fail with 401 when no auth', () => (
@@ -92,7 +90,6 @@ describe('GET /users', () => {
   ));
 });
 
-
 describe('GET /users/:uid', () => {
   it('should fail with 401 when no auth', () => (
     fetch('/users/foo@bar.baz').then((resp) => expect(resp.status).toBe(401))
@@ -126,7 +123,6 @@ describe('GET /users/:uid', () => {
       .then((json) => expect(json.email).toBe('test@test.test'))
   ));
 });
-
 
 describe('POST /users', () => {
   it('should respond with 400 when email and password missing', () => (
@@ -207,7 +203,6 @@ describe('POST /users', () => {
   ));
 });
 
-
 describe('PUT /users/:uid', () => {
   it('should fail with 401 when no auth', () => (
     fetch('/users/foo@bar.baz', { method: 'PUT' })
@@ -271,7 +266,6 @@ describe('PUT /users/:uid', () => {
       .then((json) => expect(json).toHaveProperty('token'))
   ));
 });
-
 
 describe('DELETE /users/:uid', () => {
   it('should fail with 401 when no auth', () => (

@@ -1,9 +1,9 @@
+/* eslint-disable linebreak-style */
 const {
   fetch,
   fetchAsTestUser,
   fetchAsAdmin,
 } = process;
-
 
 describe('POST /orders', () => {
   it('should fail with 401 when no auth', () => (
@@ -89,7 +89,6 @@ describe('POST /orders', () => {
       })
   ));
 });
-
 
 describe('GET /orders', () => {
   it('should fail with 401 when no auth', () => (
@@ -190,7 +189,6 @@ describe('GET /orders', () => {
   ));
 });
 
-
 describe('GET /orders/:orderId', () => {
   it('should fail with 401 when no auth', () => (
     fetch('/orders/xxx')
@@ -268,7 +266,6 @@ describe('GET /orders/:orderId', () => {
       })
   ));
 });
-
 
 describe('PUT /orders/:orderId', () => {
   it('should fail with 401 when no auth', () => (
@@ -447,7 +444,6 @@ describe('PUT /orders/:orderId', () => {
       })
   ));
 });
-
 
 describe('DELETE /orders/:orderId', () => {
   it('should fail with 401 when no auth', () => (

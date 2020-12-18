@@ -1,4 +1,6 @@
 /* eslint-disable linebreak-style */
+/* eslint-disable radix */
+/* eslint-disable linebreak-style */
 const {
   requireAuth,
   requireAdmin,
@@ -36,10 +38,12 @@ module.exports = (app, nextMain) => {
    * @code {200} si la autenticación es correcta
    * @code {401} si no hay cabecera de autenticación
    */
-  app.get('/products', requireAuth, (req, resp, next) => {
+  app.get('/products', requireAuth, (req, resp) => {
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
-    getAllData('products', page, limit)
+    const host = req.get('host');
+
+    getAllData('products', page, limit, host)
       .then((result) => resp.status(200).send(result))
       .catch(() => resp.status(404).send('no products'));
   });
@@ -61,7 +65,7 @@ module.exports = (app, nextMain) => {
    * @code {401} si no hay cabecera de autenticación
    * @code {404} si el producto con `productId` indicado no existe
    */
-  app.get('/products/:productId', requireAuth, (req, resp, next) => {
+  app.get('/products/:productId', requireAuth, (req, resp) => {
     const { productId } = req.params;
     if (!productId) {
       return resp.status(400).send('No data');
@@ -93,8 +97,10 @@ module.exports = (app, nextMain) => {
    * @code {403} si no es admin
    * @code {404} si el producto con `productId` indicado no existe
    */
-  app.post('/products', requireAdmin, (req, resp, next) => {
-    const {name, price, image, type} = req.body;
+  app.post('/products', requireAdmin, (req, resp) => {
+    const {
+      name, price, image, type,
+    } = req.body;
     if (!(name && price)) {
       return resp.status(400).send('missing required data');
     }
@@ -141,9 +147,11 @@ module.exports = (app, nextMain) => {
    * @code {403} si no es admin
    * @code {404} si el producto con `productId` indicado no existe
    */
-  app.put('/products/:productId', requireAdmin, (req, resp, next) => {
+  app.put('/products/:productId', requireAdmin, (req, resp) => {
     const { productId } = req.params;
-    const { name, price, image, type } = req.body;
+    const {
+      name, price, image, type,
+    } = req.body;
 
     const newProduct = {
       name,
@@ -185,7 +193,7 @@ module.exports = (app, nextMain) => {
    * @code {403} si no es ni admin
    * @code {404} si el producto con `productId` indicado no existe
    */
-  app.delete('/products/:productId', requireAdmin, (req, resp, next) => {
+  app.delete('/products/:productId', requireAdmin, (req, resp) => {
     const { productId } = req.params;
     getDataById('products', productId)
       .then((result) => {

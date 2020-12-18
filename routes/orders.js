@@ -1,4 +1,6 @@
 /* eslint-disable linebreak-style */
+/* eslint-disable radix */
+/* eslint-disable linebreak-style */
 const {
   requireAuth,
 } = require('../middleware/auth');
@@ -41,9 +43,13 @@ module.exports = (app, nextMain) => {
    * @code {200} si la autenticación es correcta
    * @code {401} si no hay cabecera de autenticación
    */
-  app.get('/orders', requireAuth, async (req, resp, next) => {
+  app.get('/orders', requireAuth, async (req, resp) => {
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
+    const host = req.get('host');
     const finalResult = {};
-    const orders = await getAllData('orders', page, limit);
+    let orders = await getAllData('orders', page, limit, host);
+    orders = orders.result;
     const qtyOrders = orders.length;
     if (qtyOrders.length > 0) {
       let i = 0;
@@ -58,6 +64,7 @@ module.exports = (app, nextMain) => {
           status: element.status,
           dateEntry: element.dateEntry,
         };
+        // eslint-disable-next-line no-plusplus
         i++;
         if (qtyOrders === i) {
           finalResult.orders = productArray;
@@ -90,7 +97,7 @@ module.exports = (app, nextMain) => {
    * @code {401} si no hay cabecera de autenticación
    * @code {404} si la orden con `orderId` indicado no existe
    */
-  app.get('/orders/:orderId', requireAuth, (req, resp, next) => {
+  app.get('/orders/:orderId', requireAuth, (req, resp) => {
     const { orderId } = req.params;
     getDataById('orders', orderId)
       .then((result) => {
@@ -137,7 +144,7 @@ module.exports = (app, nextMain) => {
    * @code {400} no se indica `userId` o se intenta crear una orden sin productos
    * @code {401} si no hay cabecera de autenticación
    */
-  app.post('/orders', requireAuth, (req, resp, next) => {
+  app.post('/orders', requireAuth, (req, resp) => {
     const {
       userId, client, products,
     } = req.body;
@@ -197,7 +204,7 @@ module.exports = (app, nextMain) => {
    * @code {401} si no hay cabecera de autenticación
    * @code {404} si la orderId con `orderId` indicado no existe
    */
-  app.put('/orders/:orderId', requireAuth, (req, resp, next) => {
+  app.put('/orders/:orderId', requireAuth, (req, resp) => {
     const { orderId } = req.params;
     const {
       userId, client, products, status,
@@ -253,7 +260,7 @@ module.exports = (app, nextMain) => {
    * @code {401} si no hay cabecera de autenticación
    * @code {404} si el producto con `orderId` indicado no existe
    */
-  app.delete('/orders/:orderId', requireAuth, (req, resp, next) => {
+  app.delete('/orders/:orderId', requireAuth, (req, resp) => {
     const { orderId } = req.params;
     getDataById('orders', orderId)
       .then(async (result) => {

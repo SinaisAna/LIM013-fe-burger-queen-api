@@ -11,7 +11,6 @@ const {
 } = require('../controller/users');
 
 const {
-  getAllData,
   getDataById,
   createData,
   updateDataById,
@@ -25,11 +24,11 @@ const initAdminUser = (app, next) => {
     return next();
   }
 
-  const adminUser = {
-    email: adminEmail,
-    password: bcrypt.hashSync(adminPassword, 10),
-    roles: { admin: true },
-  };
+  // const adminUser = {
+  //   email: adminEmail,
+  //   password: bcrypt.hashSync(adminPassword, 10),
+  //   roles: { admin: true },
+  // };
 
   // TODO: crear usuaria admin
   next();
@@ -133,7 +132,7 @@ module.exports = (app, next) => {
    * @code {401} si no hay cabecera de autenticación
    * @code {403} si ya existe usuaria con ese `email`
    */
-  app.post('/users', requireAdmin, (req, resp, next) => {
+  app.post('/users', requireAdmin, (req, resp) => {
     const { email, password, isadmin } = req.body;
     if (!(email && password)) {
       return resp.status(400).send('invalid email or password');
@@ -179,7 +178,7 @@ module.exports = (app, next) => {
    * @code {403} una usuaria no admin intenta de modificar sus `roles`
    * @code {404} si la usuaria solicitada no existe
    */
-  app.put('/users/:uid', requireAuth && requireAdmin, (req, resp, next) => {
+  app.put('/users/:uid', requireAuth && requireAdmin, (req, resp) => {
     const { uid } = req.params;
     const { email, password, isadmin } = req.body;
     const newUser = {
@@ -217,7 +216,7 @@ module.exports = (app, next) => {
    * @code {403} si no es ni admin o la misma usuaria
    * @code {404} si la usuaria solicitada no existe
    */
-  app.delete('/users/:uid', requireAuth && requireAdmin, (req, resp, next) => {
+  app.delete('/users/:uid', requireAuth && requireAdmin, (req, resp) => {
     const { uid } = req.params;
     getDataById('users', uid)
       .then((result) => {

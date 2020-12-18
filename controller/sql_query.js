@@ -1,14 +1,28 @@
 /* eslint-disable linebreak-style */
+/* eslint-disable no-param-reassign */
+/* eslint-disable linebreak-style */
 const mysqlConnection = require('../database');
 
 module.exports = {
-  getAllData: (table, page, limit) => new Promise((resolve, reject) => {
+  getAllData: (table, page, limit, host) => new Promise((resolve, reject) => {
     mysqlConnection.query(`SELECT * FROM ${table}`, (error, result) => {
       if (result.length) {
+        const totalData = result.length;
         const startIndex = (page - 1) * limit;
         const endIndex = page * limit;
         result = result.slice(startIndex, endIndex);
-        resolve(result);
+        const finalResult = {};
+
+        finalResult.result = result;
+        if (endIndex < totalData) {
+          finalResult.next = `<http://${host}/${table}?page=${page + 1}&limit=${limit}>`;
+        }
+        if (startIndex > 0) {
+          finalResult.prev = `<http://${host}/${table}?page=${page - 1}&limit=${limit}>`;
+        }
+        finalResult.first = `<http://${host}/${table}?page=1&limit=${limit}>`;
+        finalResult.last = `<http://${host}/${table}?page=1&limit=${limit}>`;
+        resolve(finalResult);
       } else {
         reject(error);
       }

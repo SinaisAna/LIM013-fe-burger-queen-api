@@ -1,3 +1,5 @@
+/* eslint-disable linebreak-style */
+/* eslint-disable import/no-extraneous-dependencies */
 const kill = require('tree-kill');
 
 module.exports = () => new Promise((resolve) => {

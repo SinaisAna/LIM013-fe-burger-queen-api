@@ -1,3 +1,4 @@
+/* eslint-disable linebreak-style */
 const auth = require('./auth');
 const users = require('./users');
 const products = require('./products');
