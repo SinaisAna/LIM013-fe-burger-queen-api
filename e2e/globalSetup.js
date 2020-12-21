@@ -8,7 +8,7 @@ const kill = require('tree-kill');
 const config = require('../config');
 
 const port = process.env.PORT || 8888;
-const baseUrl = process.env.REMOTE_URL || `http://127.0.0.1:${port}`;
+const baseUrl = process.env.REMOTE_URL || `http://localhost:${port}`;
 
 const __e2e = {
   port,
@@ -114,7 +114,6 @@ module.exports = () => new Promise((resolve, reject) => {
     cwd: path.resolve(__dirname, '../'),
     stdio: ['ignore', 'pipe', 'pipe'],
   });
-
   Object.assign(__e2e, { childProcessPid: child.pid });
 
   child.stdout.on('data', (chunk) => {
