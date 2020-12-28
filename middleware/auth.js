@@ -5,7 +5,7 @@ const mysqlConnection = require('../database');
 
 module.exports = (secret) => (req, resp, next) => {
   const { authorization } = req.headers;
-  // console.log(authorization);
+  //  console.log(authorization);
   if (!authorization) {
     return next();
   }
@@ -20,7 +20,7 @@ module.exports = (secret) => (req, resp, next) => {
     if (err) {
       return next(403);
     }
-    // console.log(decodedToken);
+    //  console.info(decodedToken);
     // TODO: Verificar identidad del usuario usando `decodeToken.uid`
     const sql = `SELECT * FROM users WHERE email = "${decodedToken.result[0].email}" `;
     mysqlConnection.query(sql, (error, result) => {

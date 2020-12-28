@@ -23,7 +23,6 @@ const initAdminUser = (app, next) => {
   if (!adminEmail || !adminPassword) {
     return next();
   }
-
   // const adminUser = {
   //   email: adminEmail,
   //   password: bcrypt.hashSync(adminPassword, 10),

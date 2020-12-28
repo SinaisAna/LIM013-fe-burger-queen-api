@@ -27,6 +27,7 @@ module.exports = (app, nextMain) => {
     // eslint-disable-next-line no-empty
     if (!email || !password) {
     }
+    console.info(email, password);
     const sql = `SELECT * FROM users WHERE email = "${email}" `;
     mysqlConnection.query(sql, (error, result) => {
       if (error) throw error;

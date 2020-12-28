@@ -112,15 +112,18 @@ module.exports = (app, nextMain) => {
       type,
       dateEntry,
     };
+
     createData('products', newProduct)
       .then((result) => resp.status(200).send(
         {
           _id: result.insertId,
+          name,
           price,
           image,
           type,
           dateEntry,
         },
+        console.log(result),
       ));
   });
 

@@ -47,11 +47,11 @@ module.exports = (app, nextMain) => {
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
     const host = req.get('host');
-    const finalResult = {};
-    let orders = await getAllData('orders', page, limit, host);
-    orders = orders.result;
+    // const finalResult = {};
+    const ordersT = await getAllData('orders', page, limit, host);
+    const orders = ordersT.result;
     const qtyOrders = orders.length;
-    if (qtyOrders.length > 0) {
+    if (qtyOrders > 0) {
       let i = 0;
       const productArray = [];
       orders.forEach(async (element) => {
@@ -67,8 +67,13 @@ module.exports = (app, nextMain) => {
         // eslint-disable-next-line no-plusplus
         i++;
         if (qtyOrders === i) {
-          finalResult.orders = productArray;
-          resp.status(200).send(productArray);
+          // finalResult.orders = productArray;
+          // finalResult.first = ordersT.first;
+          // finalResult.next = ordersT.next;
+          // finalResult.last = ordersT.last;
+          // finalResult.prev = ordersT.prev;
+          ordersT.result = productArray;
+          resp.status(200).send(ordersT);
         }
       });
     } else {

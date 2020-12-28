@@ -10,6 +10,7 @@ module.exports = {
         const totalData = result.length;
         const startIndex = (page - 1) * limit;
         const endIndex = page * limit;
+        const finalpages = Math.trunc(totalData / limit);
         result = result.slice(startIndex, endIndex);
         const finalResult = {};
 
@@ -21,7 +22,7 @@ module.exports = {
           finalResult.prev = `<http://${host}/${table}?page=${page - 1}&limit=${limit}>`;
         }
         finalResult.first = `<http://${host}/${table}?page=1&limit=${limit}>`;
-        finalResult.last = `<http://${host}/${table}?page=1&limit=${limit}>`;
+        finalResult.last = `<http://${host}/${table}?page=${finalpages}&limit=${limit}>`;
         resolve(finalResult);
       } else {
         reject(error);

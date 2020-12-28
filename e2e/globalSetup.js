@@ -8,6 +8,9 @@ const kill = require('tree-kill');
 const config = require('../config');
 
 const port = process.env.PORT || 8888;
+
+console.info(port);
+
 const baseUrl = process.env.REMOTE_URL || `http://localhost:${port}`;
 
 const __e2e = {
