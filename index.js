@@ -1,5 +1,6 @@
 /* eslint-disable linebreak-style */
 /* eslint-disable no-unused-vars */
+/* eslint-disable no-console */
 const express = require('express');
 const config = require('./config');
 const authMiddleware = require('./middleware/auth');
@@ -14,23 +15,30 @@ const app = express();
 
 const mysqlConnection = require('./database');
 
-app.set('config', config);
-app.set('pkg', pkg);
-
-// parse application/x-www-form-urlencoded
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
-app.use(authMiddleware(secret));
-
-// Registrar rutas
-routes(app, (err) => {
+mysqlConnection.connect((err) => {
   if (err) {
-    throw err;
+    console.log(err);
+    return;
   }
+  console.log('db is connet');
+  app.set('config', config);
+  app.set('pkg', pkg);
 
-  app.use(errorHandler);
+  // parse application/x-www-form-urlencoded
+  app.use(express.urlencoded({ extended: false }));
+  app.use(express.json());
+  app.use(authMiddleware(secret));
 
-  app.listen(port, () => {
-    console.info(`App listening on port ${port}`);
+  // Registrar rutas
+  routes(app, (err) => {
+    if (err) {
+      throw err;
+    }
+
+    app.use(errorHandler);
+
+    app.listen(port, () => {
+      console.info(`App listening on port ${port}`);
+    });
   });
 });

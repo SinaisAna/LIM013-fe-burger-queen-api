@@ -23,14 +23,17 @@ const initAdminUser = (app, next) => {
   if (!adminEmail || !adminPassword) {
     return next();
   }
-  // const adminUser = {
-  //   email: adminEmail,
-  //   password: bcrypt.hashSync(adminPassword, 10),
-  //   roles: { admin: true },
-  // };
+  const adminUser = {
+    email: adminEmail,
+    password: bcrypt.hashSync(adminPassword, 10),
+    roles: { admin: true },
+  };
 
   // TODO: crear usuaria admin
-  next();
+  createData('users', adminUser)
+    .then(() => {
+      next();
+    });
 };
 
 /*

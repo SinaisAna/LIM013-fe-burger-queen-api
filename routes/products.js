@@ -123,7 +123,7 @@ module.exports = (app, nextMain) => {
           type,
           dateEntry,
         },
-        console.log(result),
+        // console.log(result),
       ));
   });
 
