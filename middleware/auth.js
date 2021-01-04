@@ -48,7 +48,7 @@ module.exports.isAuthenticated = (req) => {
 
 module.exports.isAdmin = (req) => {
   // TODO: decidir por la informacion del request si la usuaria es admin
-  if (req.user.isadmin) {
+  if (JSON.parse(req.user.roles).admin) {
     // console.log('entro3');
     return true;
   }

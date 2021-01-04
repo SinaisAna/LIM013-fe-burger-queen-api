@@ -16,6 +16,7 @@ const {
   updateDataById,
   deleteData,
   getDataByEmail,
+  getAllData,
 } = require('../controller/sql_query');
 
 const initAdminUser = (app, next) => {
@@ -23,16 +24,20 @@ const initAdminUser = (app, next) => {
   if (!adminEmail || !adminPassword) {
     return next();
   }
+  const rolesObj = { admin: true };
   const adminUser = {
     email: adminEmail,
     password: bcrypt.hashSync(adminPassword, 10),
-    roles: { admin: true },
+    roles: JSON.stringify(rolesObj),
   };
-
   // TODO: crear usuaria admin
-  createData('users', adminUser)
-    .then(() => {
-      next();
+  getAllData('users')
+    .then(() => next())
+    .catch(() => {
+      createData('users', adminUser)
+        .then(() => {
+          next();
+        });
     });
 };
 
@@ -135,26 +140,30 @@ module.exports = (app, next) => {
    * @code {403} si ya existe usuaria con ese `email`
    */
   app.post('/users', requireAdmin, (req, resp) => {
-    const { email, password, isadmin } = req.body;
+    const { email, password, roles } = req.body;
     if (!(email && password)) {
       return resp.status(400).send('invalid email or password');
     }
     const newUser = {
       email,
       password: bcrypt.hashSync(password, 10),
-      isadmin,
+      roles,
     };
+
     getDataByEmail('users', email)
       .then(() => resp.status(403).send('users exist'))
       .catch(() => {
         createData('users', newUser)
-          .then((result) => resp.status(200).send(
-            {
-              id: result.insertId,
-              email,
-              isadmin,
-            },
-          ));
+          .then((result) => {
+            console.log(result);
+            resp.status(200).send(
+              {
+                id: result.insertId,
+                email,
+                roles,
+              },
+            );
+          });
       });
   });
 

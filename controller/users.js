@@ -6,16 +6,19 @@ const mysqlConnection = require('../database');
 
 module.exports = {
   getUsers: (req, resp) => {
-    const page = parseInt(req.query.page);
-    const limit = parseInt(req.query.limit);
-    const host = req.get('host');
-
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
+    
     const sql = 'SELECT * FROM users';
     mysqlConnection.query(sql, (error, result) => {
       if (error) throw error;
       const totalData = result.length;
+      const page = parseInt(req.query.page);
+      const limit = parseInt(req.query.limit);
+      const host = req.get('host');
+      if (!page && !limit) {
+        return resp.status(200).send(result);
+      }
+      const startIndex = (page - 1) * limit;
+      const endIndex = page * limit;
       if (totalData > 0) {
         let finalpages = Math.trunc(totalData / limit);
         if (totalData % limit > 0) {

@@ -1,8 +1,8 @@
 /* eslint-disable linebreak-style */
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const config = require('../config');
 // const router = require("express").Router();
-// const bcrypt = require('bcrypt');
 
 const mysqlConnection = require('../database');
 
@@ -22,28 +22,27 @@ module.exports = (app, nextMain) => {
    * @code {400} si no se proveen `email` o `password` o ninguno de los dos
    * @auth No requiere autenticación
    */
-  app.post('/auth', (req, resp) => {
+  app.post('/auth', (req, resp, next) => {
     const { email, password } = req.body;
     // eslint-disable-next-line no-empty
     if (!email || !password) {
+      return next(400);
     }
     console.info(email, password);
     const sql = `SELECT * FROM users WHERE email = "${email}" `;
     mysqlConnection.query(sql, (error, result) => {
       if (error) throw error;
       if (!result) {
-        return resp.status(400).json({
-          success: 0,
-          data: 'Invalid email',
-        });
+        return next(400);
       }
-      // const pass = bcrypt.compareSync(password, result[0].password);
-      const pass = password === result[0].password;
+      const pass = bcrypt.compareSync(password, result[0].password);
+      // const pass = password === result[0].password;
       if (pass) {
         // result.password = undefined;
         const jsontoken = jwt.sign({ result }, secret, {
           expiresIn: '1h',
         });
+        console.log('hola mundo 3');
         resp.header('authorization', jsontoken);
         resp.status(200).json({
           success: 1,
@@ -54,10 +53,7 @@ module.exports = (app, nextMain) => {
         // resp.header('authorization', "token");
         // resp.status(200).json(result);
       } else {
-        resp.status(400).json({
-          success: 0,
-          data: 'Invalid password',
-        });
+        return next(400);
       }
     });
   });

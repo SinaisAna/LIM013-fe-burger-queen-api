@@ -164,6 +164,7 @@ module.exports = (app, nextMain) => {
     };
     createData('orders', newOrder)
       .then((result) => {
+        console.log(result, "ga");
         products.forEach((product) => {
           const newOrderdetail = {
             id_order: result.insertId,
