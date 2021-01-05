@@ -113,11 +113,29 @@ module.exports = (app, next) => {
   app.get('/users/:uid', requireAdmin && requireAuth, (req, resp) => {
     const { uid } = req.params;
     if (!uid) {
-      return resp.status(400).send('No data');
+      return next(401);
     }
-    getDataById('users', uid)
-      .then((result) => resp.status(200).send(result))
-      .catch(() => resp.status(404).send('users does not exist'));
+    if (JSON.parse(req.user.roles)) {
+      if (!JSON.parse(req.user.roles).admin) {
+        return next(403);
+      }
+    }
+    const isEmail = uid.includes('@');
+    if (isEmail) {
+      if (!((req.user.email).toString() === uid)) {
+        return next(403);
+      }
+      getDataByEmail('users', uid)
+        .then((result) => resp.status(200).send(result))
+        .catch(() => resp.status(404).send('users does not exist'));
+    } else {
+      if (!((req.user.id).toString() === uid)) {
+        return next(403);
+      }
+      getDataById('users', uid)
+        .then((result) => resp.status(200).send(result))
+        .catch(() => resp.status(404).send('users does not exist'));
+    }
   });
 
   /**
@@ -147,15 +165,13 @@ module.exports = (app, next) => {
     const newUser = {
       email,
       password: bcrypt.hashSync(password, 10),
-      roles,
+      roles: JSON.stringify(roles),
     };
-
     getDataByEmail('users', email)
       .then(() => resp.status(403).send('users exist'))
       .catch(() => {
         createData('users', newUser)
           .then((result) => {
-            console.log(result);
             resp.status(200).send(
               {
                 id: result.insertId,

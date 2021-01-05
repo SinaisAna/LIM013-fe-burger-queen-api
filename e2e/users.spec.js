@@ -47,7 +47,6 @@ describe('GET /users', () => {
       })
       .then(({ headers, json }) => {
         const linkHeader = parseLinkHeader(headers.get('link'));
-
         const nextUrlObj = url.parse(linkHeader.next);
         const lastUrlObj = url.parse(linkHeader.last);
         const nextQuery = qs.parse(nextUrlObj.query);
@@ -57,7 +56,6 @@ describe('GET /users', () => {
         expect(nextQuery.page).toBe('2');
         expect(lastQuery.limit).toBe('1');
         expect(lastQuery.page >= 2).toBe(true);
-
         expect(Array.isArray(json)).toBe(true);
         expect(json.length).toBe(1);
         expect(json[0]).toHaveProperty('_id');
@@ -97,7 +95,9 @@ describe('GET /users/:uid', () => {
 
   it('should fail with 403 when not owner nor admin', () => (
     fetchAsTestUser(`/users/${config.adminEmail}`)
-      .then((resp) => expect(resp.status).toBe(403))
+      .then((resp) => {
+        expect(resp.status).toBe(403);
+      })
   ));
 
   it('should fail with 404 when admin and not found', () => (
