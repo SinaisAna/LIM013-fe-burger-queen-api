@@ -164,18 +164,19 @@ module.exports = (app, nextMain) => {
     };
     createData('orders', newOrder)
       .then((result) => {
-        console.log(result, "ga");
         products.forEach((product) => {
           const newOrderdetail = {
-            id_order: result.insertId,
-            id_product: product.productId,
+            id_order: result.insertId.toString(),
+            id_product: product.productId.toString(),
             quantity: product.qty,
+            // name: product.name,
+            // price: product.price,
           };
           createData('order_details', newOrderdetail);
         });
         getOrderById(result.insertId)
           .then((data) => {
-            newOrder._id = result.insertId;
+            newOrder._id = result.insertId.toString();
             newOrder.products = data;
             resp.status(200).send(newOrder);
           });

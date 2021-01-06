@@ -234,9 +234,9 @@ module.exports = (app, next) => {
     const { email, password, roles } = req.body;
     const isEmail = uid.includes('@');
     console.log("put", isEmail, email, password, roles, uid, req.user);
-    //if (!email && !password && !roles) {
-    //  return next(400);
-   // }
+    if (!email && !password && !roles) {
+      return next(400);
+    }
     if (password) {
       if (!validatePassword(password)) {
         return next(400);

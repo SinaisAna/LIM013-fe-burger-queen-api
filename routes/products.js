@@ -71,7 +71,15 @@ module.exports = (app, nextMain) => {
       return resp.status(400).send('No data');
     }
     getDataById('products', productId)
-      .then((result) => resp.status(200).send(result))
+      .then((result) => {
+        resp.status(200).send({
+          _id: result[0].id.toString(),
+          price: result[0].price,
+          image: result[0].image,
+          type: result[0].type,
+          dateEntry: result[0].dateEntry,
+        });
+      })
       .catch(() => resp.status(404).send('product does not exist'));
   });
 
@@ -116,7 +124,7 @@ module.exports = (app, nextMain) => {
     createData('products', newProduct)
       .then((result) => resp.status(200).send(
         {
-          _id: result.insertId,
+          _id: result.insertId.toString(),
           name,
           price,
           image,
@@ -150,12 +158,14 @@ module.exports = (app, nextMain) => {
    * @code {403} si no es admin
    * @code {404} si el producto con `productId` indicado no existe
    */
-  app.put('/products/:productId', requireAdmin, (req, resp) => {
+  app.put('/products/:productId', requireAdmin, (req, resp, next) => {
     const { productId } = req.params;
     const {
       name, price, image, type,
     } = req.body;
-
+    if (typeof price !== 'number') {
+      return next(400);
+    }
     const newProduct = {
       name,
       price,
