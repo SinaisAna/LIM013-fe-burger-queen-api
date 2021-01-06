@@ -11,6 +11,11 @@ const {
 } = require('../controller/users');
 
 const {
+  validateEmail,
+  validatePassword,
+} = require('../lib/validator');
+
+const {
   getDataById,
   createData,
   updateDataById,
@@ -115,25 +120,39 @@ module.exports = (app, next) => {
     if (!uid) {
       return next(401);
     }
-    if (JSON.parse(req.user.roles)) {
-      if (!JSON.parse(req.user.roles).admin) {
-        return next(403);
-      }
-    }
+
     const isEmail = uid.includes('@');
     if (isEmail) {
-      if (!((req.user.email).toString() === uid)) {
+      if (JSON.parse(req.user.roles)) {
+        if (!(JSON.parse(req.user.roles).admin
+          || ((req.user.email).toString() === uid))) {
+          return next(403);
+        }
+      } else {
         return next(403);
       }
       getDataByEmail('users', uid)
-        .then((result) => resp.status(200).send(result))
+        .then((result) => {
+          resp.status(200).send({
+            _id: result[0].id,
+            email: result[0].email,
+            roles: result[0].roles,
+          });
+        })
         .catch(() => resp.status(404).send('users does not exist'));
     } else {
-      if (!((req.user.id).toString() === uid)) {
+      if (!(JSON.parse(req.user.roles).admin
+        || ((req.user.id).toString() === uid))) {
         return next(403);
       }
       getDataById('users', uid)
-        .then((result) => resp.status(200).send(result))
+        .then((result) => {
+          resp.status(200).send({
+            _id: result[0].id,
+            email: result[0].email,
+            roles: result[0].roles,
+          });
+        })
         .catch(() => resp.status(404).send('users does not exist'));
     }
   });
@@ -162,10 +181,15 @@ module.exports = (app, next) => {
     if (!(email && password)) {
       return resp.status(400).send('invalid email or password');
     }
+    if (!(validatePassword(password) && validateEmail(email))) {
+      return next(400);
+    }
+
+    const rolesN = roles || { admin: false };
     const newUser = {
       email,
       password: bcrypt.hashSync(password, 10),
-      roles: JSON.stringify(roles),
+      roles: JSON.stringify(rolesN),
     };
     getDataByEmail('users', email)
       .then(() => resp.status(403).send('users exist'))
@@ -174,9 +198,9 @@ module.exports = (app, next) => {
           .then((result) => {
             resp.status(200).send(
               {
-                id: result.insertId,
+                _id: result.insertId.toString(),
                 email,
-                roles,
+                roles: rolesN,
               },
             );
           });
@@ -207,24 +231,78 @@ module.exports = (app, next) => {
    */
   app.put('/users/:uid', requireAuth && requireAdmin, (req, resp) => {
     const { uid } = req.params;
-    const { email, password, isadmin } = req.body;
+    const { email, password, roles } = req.body;
+    const isEmail = uid.includes('@');
+    console.log("put", isEmail, email, password, roles, uid, req.user);
+    //if (!email && !password && !roles) {
+    //  return next(400);
+   // }
+    if (password) {
+      if (!validatePassword(password)) {
+        return next(400);
+      }
+    }
+    if (email) {
+      if (!validateEmail(email)) {
+        return next(400);
+      }
+    }
+    const rolesN = roles || { admin: false };
     const newUser = {
       email,
       password: bcrypt.hashSync(password, 10),
-      isadmin,
+      roles: rolesN,
     };
-    getDataById('users', uid)
-      .then(() => {
-        updateDataById('users', uid, newUser)
-          .then(() => resp.status(200).send(
-            {
-              id: uid,
-              email,
-              isadmin,
-            },
-          ));
-      })
-      .catch(() => resp.status(404).send('users does not exist'));
+    if (!(validateEmail(email))) {
+      delete newUser.email;
+    }
+    if (!(validatePassword(password))) {
+      delete newUser.password;
+    }
+    if (!(roles)) {
+      delete newUser.roles;
+    }
+    console.log("newUser",newUser);
+    
+    if (isEmail) {
+      console.log("email",req.user.email);
+      if (!(JSON.parse(req.user.roles).admin
+        || ((req.user.email).toString() === uid))) {
+        return next(403);
+      }
+
+      getDataByEmail('users', uid)
+        .then((result) => {
+          updateDataById('users', result[0].id, newUser)
+            .then(() => resp.status(200).send(
+              {
+                _id: result[0].id,
+                email: result[0].email,
+                roles: result[0].roles,
+              },
+            ));
+        })
+        .catch(() => resp.status(404).send('users does not exist'));
+    } else {
+      console.log("email",req.user.id);
+      // eslint-disable-next-line no-lonely-if
+      if (!(JSON.parse(req.user.roles).admin
+        || ((req.user.id).toString() === uid))) {
+        return next(403);
+      }
+      getDataById('users', uid)
+        .then((result) => {
+          updateDataById('users', uid, newUser)
+            .then(() => resp.status(200).send(
+              {
+                _id: result[0].id,
+                email: result[0].email,
+                roles: result[0].roles,
+              },
+            ));
+        })
+        .catch(() => resp.status(404).send('users does not exist'));
+    }
   });
 
   /**

@@ -111,7 +111,9 @@ describe('GET /users/:uid', () => {
         expect(resp.status).toBe(200);
         return resp.json();
       })
-      .then((json) => expect(json.email).toBe('test@test.test'))
+      .then((json) => {
+        expect(json.email).toBe('test@test.test');
+      })
   ));
 
   it('should get other user as admin', () => (
@@ -155,7 +157,7 @@ describe('POST /users', () => {
       method: 'POST',
       body: {
         email: 'test1@test.test',
-        password: '12345',
+        password: '123456',
         roles: { admin: false },
       },
     })
@@ -177,7 +179,7 @@ describe('POST /users', () => {
       method: 'POST',
       body: {
         email: 'admin1@test.test',
-        password: '12345',
+        password: '123456',
         roles: { admin: true },
       },
     })

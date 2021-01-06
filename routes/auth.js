@@ -28,7 +28,6 @@ module.exports = (app, nextMain) => {
     if (!email || !password) {
       return next(400);
     }
-    console.info(email, password);
     const sql = `SELECT * FROM users WHERE email = "${email}" `;
     mysqlConnection.query(sql, (error, result) => {
       if (error) throw error;
@@ -42,7 +41,6 @@ module.exports = (app, nextMain) => {
         const jsontoken = jwt.sign({ result }, secret, {
           expiresIn: '1h',
         });
-        console.log('hola mundo 3');
         resp.header('authorization', jsontoken);
         resp.status(200).json({
           success: 1,
