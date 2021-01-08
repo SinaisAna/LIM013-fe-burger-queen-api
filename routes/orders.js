@@ -47,10 +47,12 @@ module.exports = (app, nextMain) => {
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
     const host = req.get('host');
+    console.log("entro aqui");
     // const finalResult = {};
     const ordersT = await getAllData('orders', page, limit, host);
-    const orders = ordersT.result;
-    const qtyOrders = orders.length;
+    console.log("entro aqui2", ordersT);
+    const orders = ordersT;
+    const qtyOrders = ordersT.length;
     if (qtyOrders > 0) {
       let i = 0;
       const productArray = [];
