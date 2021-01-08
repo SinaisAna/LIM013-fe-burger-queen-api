@@ -6,7 +6,6 @@ const mysqlConnection = require('../database');
 module.exports = {
   getAllData: (table, page, limit, host) => new Promise((resolve, reject) => {
     mysqlConnection.query(`SELECT * FROM ${table}`, (error, result) => {
-      console.log(result);
       if (result.length) {
         if (page && limit && host) {
           const totalData = result.length;

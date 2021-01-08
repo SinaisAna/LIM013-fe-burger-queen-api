@@ -80,7 +80,6 @@ describe('POST /orders', () => {
         return resp.json();
       })
       .then((json) => {
-        console.log(json, "test");
         expect(typeof json._id).toBe('string');
         expect(typeof json.dateEntry).toBe('string');
         expect(Array.isArray(json.products)).toBe(true);
@@ -360,7 +359,6 @@ describe('PUT /orders/:orderId', () => {
       })
       .then((json) => {
         expect(json.status).toBe('pending');
-        console.log(json, "orders");
         return fetchAsAdmin(`/orders/${json._id}`, {
           method: 'PUT',
           body: { status: 'preparing' },

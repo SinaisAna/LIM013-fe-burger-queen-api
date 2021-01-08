@@ -47,10 +47,8 @@ module.exports = (app, nextMain) => {
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
     const host = req.get('host');
-    console.log("entro aqui");
     // const finalResult = {};
     const ordersT = await getAllData('orders', page, limit, host);
-    console.log("entro aqui2", ordersT);
     const orders = ordersT;
     const qtyOrders = ordersT.length;
     if (qtyOrders > 0) {
@@ -240,19 +238,19 @@ module.exports = (app, nextMain) => {
     if (!(userId && client && products && status)) {
       // return next(404);
     }
-    const newOrder = {
-      id_user: userId,
-      client,
-      status,
-    };
-    if (!(userId)) {
-      delete newOrder.userId;
+    const newOrder = {};
+    if (userId) {
+      newOrder.id_user = userId;
     }
-    if (!(client)) {
-      delete newOrder.client;
+    if (client) {
+      newOrder.client = client;
     }
-    if (!(status)) {
-      delete newOrder.status;
+    if (status) {
+      newOrder.status = status;
+      if (status === 'delivered') {
+        const dateProcessed = new Date();
+        newOrder.dateProcessed = dateProcessed;
+      }
     }
     getDataById('orders', orderId)
       .then(async () => {

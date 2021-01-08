@@ -5,7 +5,6 @@ const mysqlConnection = require('../database');
 
 module.exports = (secret) => (req, resp, next) => {
   const { authorization } = req.headers;
-  //  console.log(authorization);
   if (!authorization) {
     return next();
   }
@@ -20,17 +19,14 @@ module.exports = (secret) => (req, resp, next) => {
     if (err) {
       return next(403);
     }
-    //  console.info(decodedToken);
     // TODO: Verificar identidad del usuario usando `decodeToken.uid`
     const sql = `SELECT * FROM users WHERE email = "${decodedToken.result[0].email}" `;
     mysqlConnection.query(sql, (error, result) => {
       if (error) throw error;
-      // console.log(result);
       if (result) {
         req.user = result[0];
         next();
       } else {
-        // console.log('entro');
         next(404);
       }
     });
@@ -40,7 +36,6 @@ module.exports = (secret) => (req, resp, next) => {
 module.exports.isAuthenticated = (req) => {
   // TODO: decidir por la informacion del request si la usuaria esta autenticada
   if (req.user) {
-    // console.log('entro2');
     return true;
   }
   return false;

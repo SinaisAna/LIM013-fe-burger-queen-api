@@ -9,12 +9,4 @@ const mysqlConnection = mysql.createConnection({
   database: 'burger',
 });
 
-// mysqlConnection.connect((err) => {
-//   if (err) {
-//     console.log(err);
-//     return;
-//   }
-//   console.log('db is connet');
-// });
-
 module.exports = mysqlConnection;
