@@ -46,7 +46,7 @@ module.exports = {
 
   getDataByKey: (table, key, value) => new Promise((resolve, reject) => {
     mysqlConnection.query(`SELECT * FROM ${table} WHERE ${key} =?`, value, (error, result) => {
-      if (result.length > 0) {
+      if (result.length > -1) {
         resolve(result);
       } else {
         reject(error);
@@ -86,8 +86,8 @@ module.exports = {
   }),
 
   getOrderById: (value) => new Promise((resolve, reject) => {
-    mysqlConnection.query('select order_details.quantity,products.name from order_details inner join products on products.id=order_details.id_product where id_order=?', value, (error, result) => {
-      if (result.length > 0) {
+    mysqlConnection.query('select order_details.quantity AS "qty",products.name AS "name", products.price AS "price" from order_details inner join products on products.id=order_details.id_product where id_order=?', value, (error, result) => {
+      if (result.length > -1) {
         resolve(result);
       } else {
         reject(error);

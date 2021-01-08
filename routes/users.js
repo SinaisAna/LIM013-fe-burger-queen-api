@@ -262,10 +262,10 @@ module.exports = (app, next) => {
     if (!(roles)) {
       delete newUser.roles;
     }
-    console.log("newUser",newUser);
-    
+    console.log("newUser", newUser);
+
     if (isEmail) {
-      console.log("email",req.user.email);
+      console.log("email", req.user.email);
       if (!(JSON.parse(req.user.roles).admin
         || ((req.user.email).toString() === uid))) {
         return next(403);
@@ -284,7 +284,7 @@ module.exports = (app, next) => {
         })
         .catch(() => resp.status(404).send('users does not exist'));
     } else {
-      console.log("email",req.user.id);
+      console.log("email", req.user.id);
       // eslint-disable-next-line no-lonely-if
       if (!(JSON.parse(req.user.roles).admin
         || ((req.user.id).toString() === uid))) {
@@ -323,6 +323,10 @@ module.exports = (app, next) => {
    */
   app.delete('/users/:uid', requireAuth && requireAdmin, (req, resp) => {
     const { uid } = req.params;
+    if (!(JSON.parse(req.user.roles).admin
+      || ((req.user.email).toString() === uid))) {
+      return next(403);
+    }
     getDataById('users', uid)
       .then((result) => {
         deleteData('users', uid)

@@ -43,7 +43,7 @@ module.exports = (app, nextMain) => {
    * @code {200} si la autenticación es correcta
    * @code {401} si no hay cabecera de autenticación
    */
-  app.get('/orders', requireAuth, async (req, resp) => {
+  app.get('/orders', requireAuth, async (req, resp, next) => {
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
     const host = req.get('host');
@@ -56,11 +56,15 @@ module.exports = (app, nextMain) => {
       const productArray = [];
       orders.forEach(async (element) => {
         const products = await getOrderById(element.id);
+        const newproducts = products.map((re) => ({
+          product: { price: re.price, name: re.name, qty: re.qty },
+        }));
+
         productArray[i] = {
           _id: element.id,
           userId: element.id_user,
           client: element.client,
-          products,
+          products: newproducts,
           status: element.status,
           dateEntry: element.dateEntry,
         };
@@ -73,11 +77,11 @@ module.exports = (app, nextMain) => {
           // finalResult.last = ordersT.last;
           // finalResult.prev = ordersT.prev;
           ordersT.result = productArray;
-          resp.status(200).send(ordersT);
+          return resp.status(200).send(ordersT);
         }
       });
     } else {
-      resp.status(400).send('not data');
+      return next(400);
     }
   });
 
@@ -109,14 +113,18 @@ module.exports = (app, nextMain) => {
         let productArray = {};
         getOrderById(result[0].id)
           .then((products) => {
+            const newproducts = products.map((re) => ({
+              product: { price: re.price, name: re.name, qty: re.qty },
+            }));
             productArray = {
               _id: result[0].id,
               userId: result[0].id_user,
               client: result[0].client,
-              products,
+              products: newproducts,
               status: result[0].status,
               dateEntry: result[0].dateEntry,
             };
+            // console.log(productArray, "entro aqui3"),
             resp.status(200).send(productArray);
           });
       })
@@ -149,11 +157,20 @@ module.exports = (app, nextMain) => {
    * @code {400} no se indica `userId` o se intenta crear una orden sin productos
    * @code {401} si no hay cabecera de autenticación
    */
-  app.post('/orders', requireAuth, (req, resp) => {
+  app.post('/orders', requireAuth, (req, resp, next) => {
     const {
       userId, client, products,
     } = req.body;
 
+    // console.log(client, "body");
+    if (!userId && !products) {
+      return next(400);
+    }
+    if (products) {
+      if (products.length === 0) {
+        return next(400);
+      }
+    }
     const dateEntry = new Date();
 
     const newOrder = {
@@ -164,21 +181,23 @@ module.exports = (app, nextMain) => {
     };
     createData('orders', newOrder)
       .then((result) => {
+        // console.log(newOrder, "cliente");
         products.forEach((product) => {
           const newOrderdetail = {
             id_order: result.insertId.toString(),
             id_product: product.productId.toString(),
             quantity: product.qty,
-            // name: product.name,
-            // price: product.price,
           };
           createData('order_details', newOrderdetail);
         });
         getOrderById(result.insertId)
           .then((data) => {
+            const newproducts = data.map((re) => ({
+              product: { qty: re.qty, name: re.name, price: re.price },
+            }));
             newOrder._id = result.insertId.toString();
-            newOrder.products = data;
-            resp.status(200).send(newOrder);
+            newOrder.products = newproducts;
+            return resp.status(200).send(newOrder);
           });
       });
   });
@@ -211,37 +230,64 @@ module.exports = (app, nextMain) => {
    * @code {401} si no hay cabecera de autenticación
    * @code {404} si la orderId con `orderId` indicado no existe
    */
-  app.put('/orders/:orderId', requireAuth, (req, resp) => {
+  app.put('/orders/:orderId', requireAuth, (req, resp, next) => {
     const { orderId } = req.params;
     const {
       userId, client, products, status,
     } = req.body;
-
+    console.log(status, "status");
+    if (status !== 'pending' && status !== 'canceled' && status !== 'delivering' && status !== 'delivered' && status !== 'preparing') {
+      return next(400);
+    }
+    if (!(userId && client && products && status)) {
+      // return next(404);
+    }
     const newOrder = {
       id_user: userId,
       client,
       status,
     };
+    if (!(userId)) {
+      delete newOrder.userId;
+    }
+    if (!(client)) {
+      delete newOrder.client;
+    }
+    if (!(status)) {
+      delete newOrder.status;
+    }
     getDataById('orders', orderId)
       .then(async () => {
         updateDataById('orders', orderId, newOrder);
         const dataProducts = await getDataByKey('order_details', 'id_order', orderId);
-        dataProducts.forEach((dProduct) => {
-          deleteData('order_details', dProduct.id);
-        });
 
-        products.forEach((product) => {
-          const newOrderdetail = {
-            id_order: orderId,
-            id_product: product.productId,
-            quantity: product.qty,
-          };
-          createData('order_details', newOrderdetail);
-        });
+        if (dataProducts.length > 0) {
+          dataProducts.forEach((dProduct) => {
+            deleteData('order_details', dProduct.id);
+          });
+        }
+
+        if (products) {
+          products.forEach((product) => {
+            const newOrderdetail = {
+              id_order: orderId,
+              id_product: product.productId,
+              quantity: product.qty,
+            };
+            createData('order_details', newOrderdetail);
+          });
+        }
+
         const resuProduct = await getOrderById(orderId);
+        if (resuProduct.length > 0) {
+          const newproducts = resuProduct.map((re) => ({
+            product: { price: re.price, name: re.name, qty: re.qty },
+          }));
+          newOrder.products = newproducts;
+        }
+        console.log("");
         newOrder._id = orderId;
-        newOrder.products = resuProduct;
-        resp.status(200).send(newOrder);
+        return resp.status(200).send(newOrder);
       })
       .catch(() => resp.status(404).send('orders does not exist'));
   });
@@ -274,11 +320,14 @@ module.exports = (app, nextMain) => {
         let productArray = {};
         getOrderById(result[0].id)
           .then((products) => {
+            const newproducts = products.map((re) => ({
+              product: { price: re.price, name: re.name, qty: re.qty },
+            }));
             productArray = {
               _id: result[0].id,
               userId: result[0].id_user,
               client: result[0].client,
-              products,
+              products: newproducts,
               status: result[0].status,
               dateEntry: result[0].dateEntry,
             };

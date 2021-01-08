@@ -41,7 +41,7 @@ describe('POST /orders', () => {
       })
       .then(([product, user]) => fetchAsTestUser('/orders', {
         method: 'POST',
-        body: { products: [{ productId: product._id, qty: 5, client: 'client' }], userId: user._id },
+        body: { products: [{ productId: product._id, qty: 5 }], client: 'client', userId: user._id },
       }))
       .then((resp) => {
         expect(resp.status).toBe(200);
@@ -80,6 +80,7 @@ describe('POST /orders', () => {
         return resp.json();
       })
       .then((json) => {
+        console.log(json, "test");
         expect(typeof json._id).toBe('string');
         expect(typeof json.dateEntry).toBe('string');
         expect(Array.isArray(json.products)).toBe(true);
@@ -276,7 +277,7 @@ describe('PUT /orders/:orderId', () => {
   it('should fail with 404 when not found', () => (
     fetchAsAdmin('/orders/xxx', {
       method: 'PUT',
-      body: { state: 'canceled' },
+      body: { status: 'canceled' },
     })
       .then((resp) => expect(resp.status).toBe(404))
   ));
@@ -359,6 +360,7 @@ describe('PUT /orders/:orderId', () => {
       })
       .then((json) => {
         expect(json.status).toBe('pending');
+        console.log(json, "orders");
         return fetchAsAdmin(`/orders/${json._id}`, {
           method: 'PUT',
           body: { status: 'preparing' },
