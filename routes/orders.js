@@ -124,7 +124,6 @@ module.exports = (app, nextMain) => {
               status: result[0].status,
               dateEntry: result[0].dateEntry,
             };
-            // console.log(productArray, "entro aqui3"),
             resp.status(200).send(productArray);
           });
       })
@@ -162,7 +161,6 @@ module.exports = (app, nextMain) => {
       userId, client, products,
     } = req.body;
 
-    // console.log(client, "body");
     if (!userId && !products) {
       return next(400);
     }
@@ -181,7 +179,6 @@ module.exports = (app, nextMain) => {
     };
     createData('orders', newOrder)
       .then((result) => {
-        // console.log(newOrder, "cliente");
         products.forEach((product) => {
           const newOrderdetail = {
             id_order: result.insertId.toString(),
@@ -235,7 +232,6 @@ module.exports = (app, nextMain) => {
     const {
       userId, client, products, status,
     } = req.body;
-    console.log(status, "status");
     if (status !== 'pending' && status !== 'canceled' && status !== 'delivering' && status !== 'delivered' && status !== 'preparing') {
       return next(400);
     }
@@ -285,7 +281,6 @@ module.exports = (app, nextMain) => {
           }));
           newOrder.products = newproducts;
         }
-        console.log("");
         newOrder._id = orderId;
         return resp.status(200).send(newOrder);
       })

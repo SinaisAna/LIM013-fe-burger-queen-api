@@ -32,26 +32,30 @@ module.exports = (app, nextMain) => {
     mysqlConnection.query(sql, (error, result) => {
       if (error) throw error;
       if (!result) {
-        return next(400);
+        return next(404);
       }
-      const pass = bcrypt.compareSync(password, result[0].password);
-      // const pass = password === result[0].password;
-      if (pass) {
-        // result.password = undefined;
-        const jsontoken = jwt.sign({ result }, secret, {
-          expiresIn: '1h',
-        });
-        resp.header('authorization', jsontoken);
-        resp.status(200).json({
-          success: 1,
-          message: 'login successfully',
-          token: jsontoken,
-        });
+      if (result.length > 0) {
+        const pass = bcrypt.compareSync(password, result[0].password);
+        // const pass = password === result[0].password;
+        if (pass) {
+          // result.password = undefined;
+          const jsontoken = jwt.sign({ result }, secret, {
+            expiresIn: '1h',
+          });
+          resp.header('authorization', jsontoken);
+          resp.status(200).json({
+            success: 1,
+            message: 'login successfully',
+            token: jsontoken,
+          });
 
-        // resp.header('authorization', "token");
-        // resp.status(200).json(result);
+          // resp.header('authorization', "token");
+          // resp.status(200).json(result);
+        } else {
+          return next(404);
+        }
       } else {
-        return next(400);
+        return next(404);
       }
     });
   });

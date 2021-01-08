@@ -229,14 +229,10 @@ module.exports = (app, next) => {
    * @code {403} una usuaria no admin intenta de modificar sus `roles`
    * @code {404} si la usuaria solicitada no existe
    */
-  app.put('/users/:uid', requireAuth && requireAdmin, (req, resp) => {
+  app.put('/users/:uid', requireAuth, (req, resp, next) => {
     const { uid } = req.params;
     const { email, password, roles } = req.body;
     const isEmail = uid.includes('@');
-    console.log("put", isEmail, email, password, roles, uid, req.user);
-    if (!email && !password && !roles) {
-      return next(400);
-    }
     if (password) {
       if (!validatePassword(password)) {
         return next(400);
@@ -247,32 +243,30 @@ module.exports = (app, next) => {
         return next(400);
       }
     }
-    const rolesN = roles || { admin: false };
-    const newUser = {
-      email,
-      password: bcrypt.hashSync(password, 10),
-      roles: rolesN,
-    };
-    if (!(validateEmail(email))) {
-      delete newUser.email;
+    const newUser = {};
+    if (email) {
+      newUser.email = email;
     }
-    if (!(validatePassword(password))) {
-      delete newUser.password;
+    if (password) {
+      newUser.password = bcrypt.hashSync(password, 10);
     }
-    if (!(roles)) {
-      delete newUser.roles;
+    if (roles) {
+      newUser.roles = roles;
     }
-    console.log("newUser", newUser);
 
     if (isEmail) {
-      console.log("email", req.user.email);
       if (!(JSON.parse(req.user.roles).admin
         || ((req.user.email).toString() === uid))) {
         return next(403);
       }
-
+      if (((req.user.email).toString() === uid) && roles) {
+        return next(403);
+      }
       getDataByEmail('users', uid)
         .then((result) => {
+          if (!email && !password && !roles) {
+            return next(400);
+          }
           updateDataById('users', result[0].id, newUser)
             .then(() => resp.status(200).send(
               {
@@ -284,14 +278,19 @@ module.exports = (app, next) => {
         })
         .catch(() => resp.status(404).send('users does not exist'));
     } else {
-      console.log("email", req.user.id);
       // eslint-disable-next-line no-lonely-if
       if (!(JSON.parse(req.user.roles).admin
         || ((req.user.id).toString() === uid))) {
         return next(403);
       }
+      if (((req.user.id).toString() === uid) && roles) {
+        return next(403);
+      }
       getDataById('users', uid)
         .then((result) => {
+          if (!email && !password && !roles) {
+            return next(400);
+          }
           updateDataById('users', uid, newUser)
             .then(() => resp.status(200).send(
               {
@@ -321,18 +320,33 @@ module.exports = (app, next) => {
    * @code {403} si no es ni admin o la misma usuaria
    * @code {404} si la usuaria solicitada no existe
    */
-  app.delete('/users/:uid', requireAuth && requireAdmin, (req, resp) => {
+  app.delete('/users/:uid', requireAuth, (req, resp, next) => {
     const { uid } = req.params;
-    if (!(JSON.parse(req.user.roles).admin
-      || ((req.user.email).toString() === uid))) {
-      return next(403);
+    const isEmail = uid.includes('@');
+    if (isEmail) {
+      if (!(JSON.parse(req.user.roles).admin
+        || ((req.user.email).toString() === uid))) {
+        return next(403);
+      }
+      getDataByEmail('users', uid)
+        .then((result) => {
+          deleteData('users', result[0].id)
+            .then(() => resp.status(200).send(result));
+        })
+        .catch(() => resp.status(404).send('users does not exist'));
+    } else {
+      // eslint-disable-next-line no-lonely-if
+      if (!(JSON.parse(req.user.roles).admin
+        || ((req.user.id).toString() === uid))) {
+        return next(403);
+      }
+      getDataById('users', uid)
+        .then((result) => {
+          deleteData('users', uid)
+            .then(() => resp.status(200).send(result));
+        })
+        .catch(() => resp.status(404).send('users does not exist'));
     }
-    getDataById('users', uid)
-      .then((result) => {
-        deleteData('users', uid)
-          .then(() => resp.status(200).send(result));
-      })
-      .catch(() => resp.status(404).send('users does not exist'));
   });
 
   initAdminUser(app, next);

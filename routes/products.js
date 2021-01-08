@@ -44,7 +44,17 @@ module.exports = (app, nextMain) => {
     const host = req.get('host');
 
     getAllData('products', page, limit, host)
-      .then((result) => resp.status(200).send(result))
+      .then((result) => {
+        const newproducts = result.map((re) => ({
+          _id: re.id.toString(),
+          name: re.name,
+          price: re.price,
+          image: re.image,
+          type: re.type,
+          dateEntry: re.dateEntry,
+        }));
+        return resp.status(200).send(newproducts);
+      })
       .catch(() => resp.status(404).send('no products'));
   });
 
@@ -74,6 +84,7 @@ module.exports = (app, nextMain) => {
       .then((result) => {
         resp.status(200).send({
           _id: result[0].id.toString(),
+          name: result[0].name,
           price: result[0].price,
           image: result[0].image,
           type: result[0].type,
@@ -131,7 +142,6 @@ module.exports = (app, nextMain) => {
           type,
           dateEntry,
         },
-        // console.log(result),
       ));
   });
 
