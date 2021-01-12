@@ -3,7 +3,6 @@ services:
   db:
     # TODO: configura tu imagen de base de datos, te recomendamos una de las sgtes:
     # https://hub.docker.com/_/mysql
-    # https://hub.docker.com/_/mongo
     networks:
       - private
   node:
